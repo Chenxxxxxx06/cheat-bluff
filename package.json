@@ -1,0 +1,100 @@
+{
+  "name": "cheat-bluff",
+  "productName": "Cheat Bluff",
+  "version": "0.6.0",
+  "private": true,
+  "type": "module",
+  "description": "A calm workspace for interview preparation, personal knowledge and review.",
+  "author": "undestand",
+  "main": "./out/main/bootstrap.mjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.mjs",
+    "package:dir": "node tools/run-electron-builder.mjs --win --x64 --dir",
+    "package:win": "node tools/run-electron-builder.mjs --win nsis --x64",
+    "verify:public": "node tools/audit-public.mjs"
+  },
+  "dependencies": {
+    "@electron-toolkit/utils": "4.0.0",
+    "@napi-rs/canvas": "1.0.3",
+    "cheerio": "1.2.0",
+    "electron-store": "11.0.2",
+    "electron-updater": "6.8.9",
+    "fflate": "0.8.3",
+    "koffi": "3.1.2",
+    "pdfjs-dist": "6.2.108",
+    "sharp": "0.35.3",
+    "ws": "8.21.3"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.undestand.cheatbluff",
+    "productName": "Cheat Bluff",
+    "asar": true,
+    "artifactName": "Cheat-Bluff-Setup-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "resources/build"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/**/*.node",
+      "node_modules/**/*.dll"
+    ],
+    "extraResources": [
+      {
+        "from": "sidecars/audio",
+        "to": "sidecars/audio",
+        "filter": [
+          "cheater-audio.exe"
+        ]
+      },
+      {
+        "from": "resources/ocr-runtime",
+        "to": "ocr-runtime",
+        "filter": [
+          "ocr_worker.py",
+          "requirements.txt",
+          "python/**/*",
+          "model-cache/**/*",
+          "!python/**/*.pdb",
+          "!python/**/__pycache__/**",
+          "!model-cache/**/.cache/**"
+        ]
+      },
+      {
+        "from": "messages",
+        "to": "messages",
+        "filter": [
+          "*.json"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "resources/build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Cheat Bluff",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

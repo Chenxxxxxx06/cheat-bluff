@@ -1,0 +1,23 @@
+name: Bug report / 问题反馈
+description: Tell us what went wrong / 告诉我们哪里出了问题
+body:
+  - type: markdown
+    attributes:
+      value: 'Thanks for helping improve Cheat Bluff. 请勿提交凭据、私人简历或未脱敏日志。'
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 操作步骤
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual results / 预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment / 环境
+      description: App version, Windows version and display scaling / 软件版本、Windows 版本及显示缩放

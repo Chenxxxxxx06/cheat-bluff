@@ -1,0 +1,10 @@
+name: Idea or question / 想法与疑问
+description: Suggestions, questions and discussions / 建议、疑问与讨论
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to share? / 想聊聊什么？
+      description: Tell us your use case or question / 可以说说使用场景、建议或困惑
+    validations:
+      required: true
