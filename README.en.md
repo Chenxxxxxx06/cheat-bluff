@@ -1,38 +1,52 @@
-> It all started because Tibo kept resetting lately, so I finally built something I had wanted to make for a while.
-
 <div align="center">
-  <img src="docs/images/icon.png" width="88" alt="Cheat Bluff logo" />
+  <img src="docs/images/icon.png" width="80" alt="Cheat Bluff" />
   <h1>Cheat Bluff</h1>
   <p><strong>Explain your work clearly. Prepare for your next interview.</strong></p>
-  <p>Personal knowledge · Interview preparation · Review</p>
+  <p>A focused Windows workspace for interview preparation and personal knowledge.</p>
   <p><a href="README.md">简体中文</a> · <strong>English</strong></p>
-  <p><a href="#getting-started">Get started</a> · <a href="#pair-it-with-a-chinese-resume">Resume template</a> · <a href="#todo">TODO</a> · <a href="https://github.com/Chenxxxxxx06/cheat-bluff/issues">Open an issue</a></p>
+  <p><a href="https://github.com/Chenxxxxxx06/cheat-bluff/releases/latest"><strong>↓ Download for Windows</strong></a>　·　<a href="#get-started-in-three-steps">Quick start</a>　·　<a href="https://github.com/Chenxxxxxx06/cheat-bluff/issues">Feedback</a></p>
 </div>
 
-![Cheat Bluff home screen with a fresh, empty profile](docs/images/home.png)
+<br />
 
-## What is it?
+![Cheat Bluff home screen](docs/images/home.png)
 
-A local interview workspace for Windows. Bring together your resume, papers, code and project notes, then prepare, practice and review around a specific role.
+<p align="center"><sub>A clean workspace. Your own materials.</sub></p>
 
-The idea is straightforward: a calm place to keep your materials, explain your work and figure out what to improve next time.
+## From building it to explaining it
 
-| Before preparation | During preparation | After an interview |
-| --- | --- | --- |
-| Organize your resume, papers, code and notes | Add the company, role and job description | Review conversations on a timeline |
-| Keep source evidence with knowledge cards | Practice answers grounded in your materials | Find records with keywords or `Ctrl+F` |
+You have worked on plenty of projects, but where do you start when someone asks about them? Bring your resume, papers, code and notes together, prepare for a specific role, then review what you can improve.
 
-- **Your own knowledge base:** organize materials, knowledge cards and personal contributions separately, with traceable sources.
-- **A focused workspace:** consistent controls, light and dark themes, system theme support and resizable panes.
-- **Start from blank:** short guidance in empty conversations, editable preparation names, and record deletion with recovery.
-- **Bring your own model:** configure compatible text, vision and embedding services yourself. Live speech has additional protocol requirements.
-- **Local storage:** profiles, materials and records stay on your computer. When you use a cloud model, relevant inputs are sent to the service you configure.
+| Organize | Prepare | Review |
+| :--- | :--- | :--- |
+| Build your personal knowledge base | Practice around the company, role and job description | Browse records on a timeline |
+| Keep source evidence with knowledge cards | Work on project introductions and follow-up questions | Search with keywords or `Ctrl+F` |
+| Separate contributions from reference material | Start with short, practical guidance | Rename, delete, restore and add notes |
 
-> This clean public edition contains none of the author's credentials, accounts, knowledge base, resume or interview records. No shared model quota is provided. The screenshot uses a fresh, empty profile. You can browse the interface and manage materials without a model connection; AI answers require your own configuration.
+Light and dark themes follow your system, and panes are resizable. Materials and records stay on your computer. When you use a cloud model, relevant inputs are sent to the service you configure.
 
-## Getting started
+## Get started in three steps
 
-This is currently a source distribution. You need **Windows, Node.js 24 and npm**.
+**① Download and install**
+
+Go to **[Releases](https://github.com/Chenxxxxxx06/cheat-bluff/releases/latest)**, download `Cheat-Bluff-Setup-0.6.0-x64.exe`, and run it. Supports Windows 10 / 11 x64. The installer includes the application runtime and local OCR; no Node.js, Python setup or compilation is needed.
+
+The installer is not currently signed with a trusted code-signing certificate, so Windows may show “Unknown publisher.” Download only from this repository's Releases and check the included SHA-256 file if needed.
+
+**② Add your own materials**
+
+Open the personal knowledge library, create a profile, and import your resume, project notes, papers or code. Review the knowledge cards before practicing with them.
+
+**③ Prepare your next interview**
+
+Configure your own model connection in “AI 与本地数据”, create a preparation, add the role requirements, and start practicing. Return to the records afterward to add your review notes.
+
+> **Starts empty. Configured by you.** No author credentials, accounts, knowledge base, interview history or shared model quota are included. Browsing and material management work without a model connection; AI answers require your own service. Live speech uses the DashScope WebSocket protocol.
+
+<details>
+<summary>Prefer running from source?</summary>
+
+Requires Windows, Node.js 24 and npm:
 
 ```bash
 git clone https://github.com/Chenxxxxxx06/cheat-bluff.git
@@ -41,66 +55,49 @@ npm ci
 npm start
 ```
 
-On first launch:
-
-1. **Build your knowledge base:** create a personal profile and import your own resume and project materials.
-2. **Configure a model if needed:** open “AI 与本地数据”, enter your service address, model names and credentials, then test the connection. Replace the placeholder address.
-3. **Prepare an interview:** name the preparation, add the company, role and job description, and select relevant materials.
-4. **Practice and review:** work through project introductions and follow-up questions; later search records, rename them and add review notes.
-
-Text-based PDFs, Office documents, code and plain text can be imported directly. Scanned-document recognition requires a separately prepared local OCR runtime and models; these large files are not included. Live transcription uses the DashScope WebSocket protocol, which ordinary text-model services may not support.
-
-Local data is stored separately in `%APPDATA%/CheatBluff/`. **This edition does not read the author's old data directory or the login credentials of other AI applications.**
-
-<details>
-<summary>Development, checks and packaging</summary>
-
 ```bash
 npm test
 npm run verify:public
 npm run package:dir
 ```
 
-`out/` contains the currently runnable application code; `test/` contains public-edition regression tests. Build outputs go to `dist/` and are not committed. Initial dependency installation requires internet access. Model connections and local OCR components are configured by each user.
+The source repository does not include the large OCR runtime and models. Download the Release installer for bundled OCR. Application data is stored separately in `%APPDATA%/CheatBluff/`; it does not read the author's old data directory or other AI applications' login credentials.
 
 </details>
 
-## Pair it with a Chinese resume
+## Get your resume ready, too
 
-Write down your experience clearly, then practice talking about it. This separate template pairs well with Cheat Bluff:
+There is a companion **[Chinese LaTeX resume template →](https://github.com/Chenxxxxxx06/chinese-resume-latex)** with Chinese typography, project entries, clickable links and logo slots. Fill in your own content, compile with XeLaTeX or Overleaf, then import the resulting PDF into Cheat Bluff.
 
-**[Chinese Resume LaTeX](https://github.com/Chenxxxxxx06/chinese-resume-latex)**
-
-It includes Chinese typography, project entries, clickable links and logo slots. Edit your content and compile with **XeLaTeX**, or upload it to Overleaf and select XeLaTeX. You can then import your generated PDF into Cheat Bluff. This is a link to a template, not an import of anyone's personal resume.
-
-A small suggestion, inspired by Asu: **sketch a simple logo for your project and put it in your LaTeX resume.** A clear shape that remains recognizable at small sizes is enough. Save the image under the template's `assets/` directory, for example:
+A small suggestion inspired by Asu: **sketch a simple project logo and put it in your resume.** It only needs to be clear and recognizable at a small size. Place the image in the template's `assets/` directory:
 
 ```latex
 \projectentry[assets/project-logo.png]
   {Your project}{Your role}{Tech stack or a one-line description}
 ```
 
-A fuller guide covering consistent sizes, vector exports and resume layout examples is planned.
+A short guide to logo sizing, vector exports and LaTeX layout is planned.
 
-## TODO
+## What's next
 
-- [ ] Make project explanations more conversational, with fewer stock phrases.
-- [ ] Keep fixing bugs and improve edge cases and error messages.
-- [ ] Improve different resolutions, display scaling and narrow-window layouts.
-- [ ] Improve knowledge ownership checks, deduplication and source accuracy.
-- [ ] Add connection checks and setup guidance for more model services.
-- [ ] Make OCR component installation and desktop distribution easier.
-- [ ] Add a complete project-logo-to-LaTeX-resume tutorial.
-- [ ] Document and progressively replace recovered code; improve provenance and licensing records.
+- [ ] Make answers more conversational, with fewer stock phrases.
+- [ ] Keep fixing bugs and improve error messages and small usability details.
+- [ ] Refine resolutions, display scaling and narrow-window layouts.
+- [ ] Improve knowledge deduplication, project ownership checks and citations.
+- [ ] Make model setup easier and support more compatible services.
+- [ ] Add a project-logo-to-LaTeX-resume tutorial.
+- [ ] Document recovered code and improve provenance and licensing records.
 
-## Issues are welcome
+## Why build this?
 
-**Questions, bug reports, ideas and suggestions are all welcome!** I will read them, take them seriously and do my best to fix reproducible problems. Discussions about making the app more useful are welcome too.
+Tibo kept resetting lately, so I took the opportunity to finally build the interview tool I had been thinking about. Hopefully it makes your preparation a little easier, too.
 
-[Report a problem or share an idea →](https://github.com/Chenxxxxxx06/cheat-bluff/issues/new/choose)
+**Issues are welcome!** Send questions, bug reports, ideas or suggestions. I will read them carefully and do my best to fix reproducible problems. Let's make the app more useful together.
 
-Steps to reproduce, expected behavior and actual results help a lot. Please redact personal information and credentials from screenshots and logs.
+[Report a problem / share an idea →](https://github.com/Chenxxxxxx06/cheat-bluff/issues/new/choose)
+
+<sub>Please include steps to reproduce and redact personal information and credentials from screenshots and logs.</sub>
 
 ---
 
-**undestand** · This project includes modifications built on recovered code. Public visibility does not imply a single open-source license for every component. See [SOURCE_PROVENANCE](docs/SOURCE_PROVENANCE.md); existing third-party notices are retained.
+<p align="center">Made by <strong>undestand</strong> · <a href="docs/SOURCE_PROVENANCE.md">Source and licensing notes</a></p>
