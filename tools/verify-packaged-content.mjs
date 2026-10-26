@@ -3,7 +3,7 @@ import {readFile,readdir,writeFile,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-const archive='dist/win-unpacked/resources/app.asar';
+const archive=process.argv[2]??'dist/win-unpacked/resources/app.asar';
 const packed=JSON.parse(asar.extractFile(archive,'package.json').toString());
 const source=JSON.parse(await readFile('package.json','utf8'));
 assert.equal(packed.version,source.version);assert.equal(packed.main,source.main);

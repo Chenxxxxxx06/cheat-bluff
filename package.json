@@ -1,7 +1,7 @@
 {
   "name": "cheat-bluff",
   "productName": "Cheat Bluff",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "type": "module",
   "description": "A calm workspace for interview preparation, personal knowledge and review.",

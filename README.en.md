@@ -29,7 +29,7 @@ Light and dark themes follow your system, and panes are resizable. Materials and
 
 **① Download and install**
 
-Go to **[Releases](https://github.com/Chenxxxxxx06/cheat-bluff/releases/latest)**, download `Cheat-Bluff-Setup-0.6.0-x64.exe`, and run it. Supports Windows 10 / 11 x64. The installer includes the application runtime and local OCR; no Node.js, Python setup or compilation is needed.
+Go to **[Releases](https://github.com/Chenxxxxxx06/cheat-bluff/releases/latest)**, download `Cheat-Bluff-Setup-0.6.1-x64.exe`, and run it. Supports Windows 10 / 11 x64. The installer includes the application runtime and local OCR; no Node.js, Python setup or compilation is needed.
 
 The installer is not currently signed with a trusted code-signing certificate, so Windows may show “Unknown publisher.” Download only from this repository's Releases and check the included SHA-256 file if needed.
 
@@ -65,7 +65,7 @@ The source repository does not include the large OCR runtime and models. Downloa
 
 </details>
 
-## Latest source updates
+## What's new in 0.6.1
 
 Apple-inspired grouped connection settings, more conversational project answers, and fixes for multi-part questions and unrelated project context.
 
@@ -76,9 +76,9 @@ Apple-inspired grouped connection settings, more conversational project answers,
 - Import PDF/DOCX resumes, text PDFs, common source files, or a local folder. Code is read as text; it is not executed. Legacy DOC files need conversion to DOCX or PDF.
 - Importing saves extracted text locally. Click **AI distill** after configuring your own model, then review any personal-contribution cards before using them.
 - Reimport the same files after editing them. Unchanged content is reused; changed sources invalidate old cards and are distilled again. There is no automatic filesystem watching.
-- Scanned PDFs and images need the local OCR runtime. Release 0.6.0 includes it; a source checkout requires separate preparation. Poor scans may still need manual correction. Single-file imports are limited to 30 MB, and long materials may be truncated or require splitting.
+- Scanned PDFs and images need the local OCR runtime. Release 0.6.1 includes it; a source checkout requires separate preparation. Poor scans may still need manual correction. Single-file imports are limited to 30 MB, and long materials may be truncated or require splitting.
 
-These changes are on the source branch; the existing 0.6.0 installer has not been replaced by this commit.
+These changes are included in the 0.6.1 Windows installer. Configure your own model and import your own materials after installation.
 
 ## Get your resume ready, too
 
