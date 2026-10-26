@@ -1,4 +1,5 @@
-import {trustedCuratedCitations} from './realtime-answer-card.mjs';
+import {splitQuestionParts} from './question-parts.mjs';
+import {trustedCuratedCitations,buildVerifiedPersonalResponse} from './realtime-answer-card.mjs';
 import {spokenAnswer,PROJECT_NAMES} from './spoken-answer.mjs';
 import {selectCatalogCitations} from './curated-catalog.mjs';
 
@@ -51,6 +52,16 @@ export function renderGroundedSelection(raw,sources,projects,{maxCardsPerProject
   return {text:text.join('\n\n'),evidenceIds};
 }
 export async function selectGroundedProjectAnswer({aiService,question,retrieval,signal,maxTokens=500,answerLength='standard'}) {
+  if(!retrieval?.conversationContext?.projects?.length)return null;
+  const parts=splitQuestionParts(question);
+  if(parts.length>1){
+    const answers=[];
+    for(const part of parts){
+      const answer=buildVerifiedPersonalResponse({question:part,retrieval,answerLength}) ?? await selectGroundedProjectAnswer({aiService,question:part,retrieval,signal,maxTokens,answerLength});
+      answers.push(answer??{text:'这一问目前没有足够的材料确认。',evidenceIds:[]});
+    }
+    return {text:answers.map(a=>a.text).join('\n\n'),parts:parts.map((question,i)=>({question,text:answers[i].text})),evidenceIds:[...new Set(answers.flatMap(a=>a.evidenceIds))],source:'grounded_multipart_answer'};
+  }
   const semantic=await selectCatalogCitations({aiService,question,retrieval,signal});
   const sources=buildGroundedProjectSources({...retrieval,citations:[...semantic,...(retrieval?.citations??[])]});
   if(!sources.length)return retrieval?.conversationContext?.projects?.length

@@ -1,11 +1,12 @@
+import {isCodingRequest,spokenInterviewPolicy} from './spoken-interview.mjs';
 import { EVIDENCE_POLICY, UNTRUSTED_MATERIAL_POLICY } from "./base-policy.mjs";
 import { buildLanguagePolicy } from "./language-policy.mjs";
 
 export function classifyInterviewQuestion(value) {
   const text = String(value ?? "");
-  if (/(?:算法|复杂度|leetcode|动态规划|二叉树|数组|链表|排序|查找|algorithm|time complexity)/i.test(text)) return "algorithm";
-  if (/(?:系统设计|架构|高并发|分布式|缓存|限流|消息队列|system design|scalab)/i.test(text)) return "system_design";
-  if (/(?:冲突|失败|困难|推动|协作|领导|优缺点|为什么离职|behavior|tell me about a time)/i.test(text)) return "behavioral";
+  if (isCodingRequest(text)) return "algorithm";
+  if (/(?:设计|搭建|构建).{0,15}(?:系统|架构|服务|缓存|队列)|system design/i.test(text)) return "system_design";
+  if (/(?:讲|分享|描述|举).{0,10}(?:一次|经历|例子).{0,20}(?:冲突|失败|困难|协作)|为什么离职|tell me about a time/i.test(text)) return "behavioral";
   if (/(?:项目|负责|经历|简历|project|resume|experience)/i.test(text)) return "project";
   return "technical";
 }
@@ -33,11 +34,15 @@ export function buildRealtimeSystemPrompt(language, questionType = "technical", 
       ? "深度补充模式：跳过卡片已有句，补充架构、关键源码、消融或对比验证、失败案例与能力边界。"
       : "标准补充模式：跳过卡片已有句，补充问题、方案、结果和取舍。";
   return [
-    options.generalKnowledge ? "你是技术教学助手。本题仅解释通用原理或代码，使用中性第三人称。禁止生成本人实践、学习记录、抓包实验、实习故事或项目贡献。懂原理不证明亲自实现过；问到个人经历时只说现有资料无法确认。" : "你是实时面试回答助手。直接给出候选人可以说出口的答案，不解释答题方法，不使用‘作为 AI’等开场。",
+    options.generalKnowledge ? "你是技术教学助手。本题仅解释通用原理或代码，使用中性第三人称。禁止生成本人实践、学习记录、抓包实验、实习故事或项目贡献。这类题只解释技术，不添加个人实操或学习意愿，也不讨论材料是否齐全。" : "你是实时面试回答助手。直接给出候选人可以说出口的答案，不解释答题方法，不使用‘作为 AI’等开场。",
+    options.skillExperience ? '当前是在准备技能与实操经历的面试口述。没有直接证据时，不推断熟悉程度，也不认定用户未实操过。明确说“这部分实操经历还需要补充确认”，理论知识可正常解释。不能编造已开始学习、已做练习或生产部署。多个问题分别回答，保留可以依据通用知识回答的部分。' : '',
     buildLanguagePolicy(language),
+    spokenInterviewPolicy(questionType, options),
     typePolicy,
+    '个人履历不能由模型推断。已确认的项目贡献才可以说“我负责/我实现”；理论解释可以说“我的理解是”，它不代表实践经历。不要用XX/YY占位符，不写“示例话术、非事实断言”。多个问题逐问回答，不能只答最后一问。',
     questionType==='algorithm' ? '保持紧凑：思路、关键变量、复杂度、边界各一句，接完整代码和少量assert用例；代码后不再添加深度补充，避免输出预算截断。不要用勾号表示测试已实际执行。' : '',
     tcpReference,
+    options.generalKnowledge && /链表/.test(options.question??'') ? '链表知识核对：节点不要求物理连续；按下标查找通常需O(n)。插入删除只有已拿到要修改的节点及必要前驱时，改指针才是O(1)，查找位置仍需O(n)，不要无条件说增删O(1)。单链表删除通常需要前驱；双链表多占一个前驱指针。概念回答可用“节点各自记着下一个在哪儿”解释，不要把理论用途说成本人实操。参考Tech Interview Handbook linked-list cheatsheet。' : '',
     verifiedCard ? verifiedLengthPolicy : options.lengthPolicy ?? "",
     verifiedCard || (fastOpening
       ? `本地快链路已经展示了这句开场：${fastOpening}\n后续完整答案应自然承接，不要原样重复。`

@@ -1,3 +1,5 @@
+import {phraseGroundedAnswer} from '../knowledge/spoken-project-answer.mjs';
+import {guardModelSelfClaims,isSkillExperienceQuestion} from '../knowledge/answer-style.mjs';
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 import { readFile, writeFile } from "node:fs/promises";
@@ -36,7 +38,7 @@ import { createUnavailableAiService } from "../qwen-ai-service.mjs";
 
 const DEFAULT_HOST = "127.0.0.1";
 const APP_VERSION = JSON.parse(await readFile(new URL('../../../package.json',import.meta.url),'utf8')).version;
-const DEFAULT_PORT = 43139;
+const DEFAULT_PORT = 43149;
 const JSON_LIMIT_BYTES = 34 * 1024 * 1024;
 const DEFAULT_AUTO_ANSWER_COOLDOWN_MS = 700;
 const DEFAULT_DEEP_RETRIEVAL_TIMEOUT_MS = 400;
@@ -2043,12 +2045,12 @@ async function emitAiAnswer(send, payload, interviewId, store, aiService, option
     cards: workspaceCards,
     answerLength,
   });
-  const preparedResponse = !screenshot ? (buildFundamentalsResponse(resolvedText,fastRetrieval?.conversationContext)??buildVerifiedPersonalResponse({question:resolvedText,retrieval:fastRetrieval,answerLength})) : null;
+  const preparedResponse = !screenshot ? (buildVerifiedPersonalResponse({question:resolvedText,retrieval:fastRetrieval,answerLength})) : null;
   const fastLead = preparedResponse?.text ?? verifiedAnswerCard?.text
     ?? buildFastAnswerLead(resolvedText, fastRetrieval, [], resolveWorkspaceLanguage(bundle, interview));
   // Project selection returns a complete reviewed answer. Its earlier hint is
   // provisional and must not become a repeated (or irrelevant) answer prefix.
-  const streamLead = preparedResponse?.text ?? (fastRetrieval?.conversationContext?.projects?.length ? '' : fastLead);
+  const streamLead = preparedResponse || fastRetrieval?.conversationContext?.projects?.length ? '' : verifiedAnswerCard?.text ?? ''; // No generic template prefix.
   if (verifiedAnswerCard) {
     const revision = options.revision ?? record.revision;
     send("answer_hint", {
@@ -2085,7 +2087,8 @@ async function emitAiAnswer(send, payload, interviewId, store, aiService, option
   try {
     if (preparedResponse) {
       retrieval=fastRetrieval;
-      streamed=true;
+      const phrased = await phraseGroundedAnswer({aiService,question:resolvedText,answer:preparedResponse,answerLength,signal:AbortSignal.any([controller.signal,AbortSignal.timeout(25000)])});
+      answer=phrased.text;
     } else {
     retrieval = await retrieveInterviewKnowledge(options.knowledgeIndex, store, interview, resolvedText, {
       personalProfileId: interview?.personalProfileId ?? null,
@@ -2098,10 +2101,12 @@ async function emitAiAnswer(send, payload, interviewId, store, aiService, option
     }
     const questionType = retrieval?.conversationContext?.questionType ?? classifyInterviewQuestion(resolvedText);
     const cloudSignal=AbortSignal.any([controller.signal,AbortSignal.timeout(35000)]);
-    const grounded=!screenshot?await selectGroundedProjectAnswer({aiService,question:resolvedText,retrieval,signal:cloudSignal,maxTokens:500,answerLength}):null;
-    if(grounded){answer=grounded.text;answerSource=grounded.source;}
+    const grounded=!screenshot&&!isSkillExperienceQuestion(resolvedText)?await selectGroundedProjectAnswer({aiService,question:resolvedText,retrieval,signal:cloudSignal,maxTokens:500,answerLength}):null;
+    if(grounded){const phrased=await phraseGroundedAnswer({aiService,question:resolvedText,answer:grounded,answerLength,signal:cloudSignal});answer=phrased.text;answerSource=grounded.source;}
     else {
+    let pendingModelText = "";
     answer = await aiService.complete({
+      onDelta: delta => { pendingModelText += delta; partialText = guardModelSelfClaims(pendingModelText,{skillExperience:isSkillExperienceQuestion(resolvedText)}); },
       messages: buildRealtimeMessages(store, interviewId, resolvedText, Boolean(screenshot), retrieval, streamLead, {
         answerLength,
         verifiedAnswerCard:streamLead?verifiedAnswerCard:null,
@@ -2113,13 +2118,9 @@ async function emitAiAnswer(send, payload, interviewId, store, aiService, option
       temperature: 0,
       maxTokens: questionType === "algorithm" ? Math.max(700, lengthProfile.maxTokens) : lengthProfile.maxTokens,
       signal: cloudSignal,
-      onDelta: (delta) => {
-        if (!isCurrent()) return;
-        streamed = true;
-        partialText += delta;
-        send("answer_text_delta", { requestId, messageId: assistantMessageId, delta });
-      },
+
     });
+    answer = guardModelSelfClaims(answer,{skillExperience:isSkillExperienceQuestion(resolvedText)});
     }
     }
   } catch (error) {
@@ -2253,15 +2254,17 @@ function buildRealtimeMessages(store, interviewId, resolvedText, hasScreenshot, 
   const bundle = interview?.workspaceId
     ? store.state.workspaceMaterials[interview.workspaceId]
     : null;
-  const context = retrieval?.conversationContext?.generalKnowledge ? '' : [buildWorkspaceContext(bundle, resolvedText, store.state.workspaceCards[interview?.workspaceId] ?? []),
+  const context = (isSkillExperienceQuestion(resolvedText)||retrieval?.conversationContext?.generalKnowledge) ? '' : [buildWorkspaceContext(bundle, resolvedText, store.state.workspaceCards[interview?.workspaceId] ?? []),
     formatPersonalProfile(store, resolvePersonalProfile(store, interview?.workspaceId, interview?.personalProfileId ?? null))].filter(Boolean).join("\n\n");
-  const history = buildRecentRealtimeHistory(interview);
+  const standaloneGeneral = retrieval?.conversationContext?.generalKnowledge && !/(?:刚才|上面|那它|这个方法|^那)/.test(resolvedText);
+  const history = isSkillExperienceQuestion(resolvedText)||standaloneGeneral ? [] : buildRecentRealtimeHistory(interview);
   const questionType = retrieval?.conversationContext?.questionType ?? classifyInterviewQuestion(resolvedText);
   return [
     {
       role: "system",
       content: buildRealtimeSystemPrompt(resolveWorkspaceLanguage(bundle, interview), questionType, fastOpening, {
         question: resolvedText,
+        skillExperience: isSkillExperienceQuestion(resolvedText),
         verifiedCard: options.verifiedAnswerCard,
         generalKnowledge: retrieval?.conversationContext?.generalKnowledge===true,
         answerLength: normalizeAnswerLength(options.answerLength),
@@ -2274,9 +2277,9 @@ function buildRealtimeMessages(store, interviewId, resolvedText, hasScreenshot, 
       content: [
         hasScreenshot ? "请结合所附截图理解题目。" : "",
         `本轮面试问题：${resolvedText}`,
-        retrieval?.conversationContext?.note ?? "",
-        context ? `候选人事实与岗位画像：\n${context}` : "候选人材料：未提供。",
-        formatKnowledgeContext(retrieval),
+        isSkillExperienceQuestion(resolvedText) ? "" : retrieval?.conversationContext?.note ?? "",
+        context ? `候选人事实与岗位画像：\n${context}` : "",
+        isSkillExperienceQuestion(resolvedText) ? "技能实操经历尚未确认，不要推断已做过或没做过；提示补充事实后再整理个人回答，不从其他项目推断实践或部署经历。" : retrieval?.conversationContext?.generalKnowledge ? "" : formatKnowledgeContext(retrieval),
       ].filter(Boolean).join("\n\n"),
     },
   ];

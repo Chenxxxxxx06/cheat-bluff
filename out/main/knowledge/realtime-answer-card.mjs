@@ -1,3 +1,5 @@
+import {isSkillExperienceQuestion} from './answer-style.mjs';
+import {splitQuestionParts} from './question-parts.mjs';
 import {asksPersonalContribution} from './conversation-context.mjs';
 import {spokenAnswer,PROJECT_NAMES,hasPersonalClaim,cardAnswerTexts} from './spoken-answer.mjs';
 const HIGH_CONFIDENCE_THRESHOLD = 0.82;
@@ -110,6 +112,12 @@ export function buildVerifiedAnswerCard({
 }
 
 export function buildVerifiedPersonalResponse({question,retrieval,answerLength='standard'}={}) {
+  if(splitQuestionParts(question).length>1)return null;
+  const asksCapability=isSkillExperienceQuestion(question);
+  if(asksCapability){
+    const exact=selectCuratedPersonalAnswer(normalizeCitations(retrieval?.citations),question,classifyFrequentInterviewQuestion(question));
+    if(!exact?.exact)return null;
+  }
   if(retrieval?.conversationContext?.personalBackground){
     const candidate=selectCuratedPersonalAnswer(normalizeCitations(retrieval?.citations),question,classifyFrequentInterviewQuestion(question));
     if(!candidate?.exact)return {text:'这部分个人动机和转折经历还没有补充，暂时不能替你编一个故事。需要先记录真实原因、具体事件和当时的选择，再整理成口述回答。',evidenceIds:[],source:'personal_background_unconfirmed'};

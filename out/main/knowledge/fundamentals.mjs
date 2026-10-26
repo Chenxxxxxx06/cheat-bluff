@@ -1,7 +1,10 @@
 // Small, audited teaching cards. These are general facts, never biography.
-export function buildFundamentalsResponse(question, context) {
+import {splitQuestionParts} from './question-parts.mjs';
+export function buildFundamentalsResponse(question, context, answerLength='standard') {
+  if(splitQuestionParts(question).length>1)return null;
   if(!context?.generalKnowledge)return null;
   const text=String(question??'');
+  if(/(?:TCP|三次握手)/i.test(text) && /(?:作用|为什么|为何|流程|两句|简短)/.test(text) && (answerLength==='quick'||/(?:两句|一句|简短)/.test(text)) && !/(?:丢|重传|同时打开|TLS|HTTPS|QUIC|拥塞|四次|两次|状态|实现过)/i.test(text))return {source:'verified_fundamentals_card',evidenceIds:['rfc9293-section3.5'],text:'通常建连时，三次握手让双方确认彼此的起始序列号，也避免把旧的重复请求当成新连接。过程就是客户端发 SYN，服务端回 SYN+ACK，客户端再回 ACK。'};
   if(/(?:TCP|三次握手)/i.test(text)&&/(?:为什么|为何|三次|两次|第三次|握手流程)/.test(text)&&!/(?:TLS|HTTPS|QUIC|拥塞|四次挥手|代码实现|写.{0,4}协议栈)/i.test(text))return {
     source:'verified_fundamentals_card',evidenceIds:['rfc9293-section3.5'],
     text:'TCP普通主动/被动建连用三次握手来同步双方初始序列号，并避免旧的重复建连请求造成混淆。\n\n客户端先发SYN；服务端返回SYN+ACK，既确认客户端的序列号，也告知自己的序列号；客户端再发ACK，确认服务端的序列号。第二个报文合并了SYN与ACK，所以普通流程不必拆成四个报文。\n\n不能把第三次ACK丢失时的状态说反：客户端收到合法SYN+ACK并发ACK后已进入ESTABLISHED；服务端在收到合法ACK前仍处于SYN-RECEIVED。握手不是对网络永不丢包的保证；同时打开也有不同的报文过程。\n\n懂这些原理不证明亲自实现过TCP；现有资料不足以确认个人协议栈实现经历。依据：RFC 9293 §3.5、图6–8：https://www.rfc-editor.org/rfc/rfc9293.html#section-3.5'

@@ -3,7 +3,7 @@ import {classifyInterviewQuestion} from '../prompts/realtime.mjs';
 const aliases = {};
 const norm = value => String(value ?? '').toLowerCase().replace(/[\s_-]+/g,'');
 export const asksPersonalContribution = question => /(?:个人贡献|个人调|亲自|本人|谁写|(?:你|我|自己|个人|作者).{0,12}(?:独立|分工)|[你我].{0,35}(?:写了|写过|写的|负责|做了|做过|承担|设计|完成|贡献|动.{0,4}手)|自己.{0,20}(?:写|负责|做|承担|动.{0,4}手)|一个人.{0,10}(?:写|做|设计|完成))/.test(question);
-const profileQuestion = question => /(?:简历|项目|经历|负责|贡献|实习|自我介绍|这些系统|奖项|求职|应聘|[你我].{0,12}(?:做|动手|承担))/.test(question)||asksPersonalContribution(question);
+const profileQuestion = question => /(?:简历|项目|经历|负责|贡献|实习|自我介绍|这些系统|这篇论文|这份材料|我的资料|代码仓库|奖项|求职|应聘|[你我].{0,12}(?:做|动手|承担))/.test(question)||asksPersonalContribution(question);
 const backgroundQuestion = question => /(?:职业规划|个人动机|求职动机|亲身经历|转折故事|博士.{0,8}(?:规划|申请|动机)|博士研究方向.{0,12}(?:为什么|选|计划)|(?:为什么|为何|原因|决定|选择|动机|想法).{0,12}(?:读博|读研|深造|选择这个岗位)|(?:读博|读研).{0,12}(?:原因|动机|想法|选择|决定))/.test(question);
 // Enrollment is a source-backed resume fact; it must not use the unknown-motivation fallback.
 const educationFactQuestion = question => !/(?:字段|SQL|数据库|(?:提取|抽取|解析|识别).{0,15}(?:学历|教育背景|入学|毕业|学校)|(?:学历|教育背景|入学时间|毕业时间).{0,8}(?:列|值|缺失|为空))/i.test(question)
@@ -15,14 +15,17 @@ export function resolveConversationContext(question, interview, projects = []) {
   const prior = (interview?.answers??[]).filter(m=>m.role==='user'&&m.content).slice(-10);
   const personalBackground = backgroundQuestion(question);
   const personalEducation = educationFactQuestion(question) && (!explicit.length || /(?:[你我].{0,18}(?:在读|就读|入学|毕业|保研|读博|读研)|(?:你的|我的).{0,6}(?:学历|教育背景|学校))/.test(question));
-  const standalone = personalBackground || personalEducation || /(?:LeetCode|八股|TCP|UDP|两数之和|二叉树|链表|动态规划|操作系统|换个话题|换一道)/i.test(question);
+  const genericAdvice = !explicit.length && !asksPersonalContribution(question) && /(?:面试|回答|表达|沟通).{0,40}(?:怎么|怎样|如何|技巧)|(?:怎么|怎样|如何).{0,35}(?:面试|回答|表达)|没做过的技术/.test(question) && !/(?:这个项目|该项目|刚才|上面|前面|我的经历|我的贡献)/.test(question);
+  const standalone = genericAdvice || personalBackground || personalEducation || /(?:LeetCode|八股|TCP|UDP|两数之和|二叉树|链表|动态规划|操作系统|换个话题|换一道)/i.test(question);
   const referential = /(?:刚才|上面|前面|它|这个|那个|这条|那条|那加|那倒|那遇|假如|这些|分别|相比|比较|区别|跟.+比)/.test(question) || /^那/.test(question);
   let inherited=[], anchor='';
-  if (!standalone && (explicit.length===0 || (explicit.length===1 && /(?:刚才|上面|前面|它|这个|那个|跟它|和它|^和.+比)/.test(question)))) {
+  if (!standalone && referential && (explicit.length===0 || (explicit.length===1 && /(?:刚才|上面|前面|它|这个|那个|跟它|和它|^和.+比)/.test(question)))) {
     for(let i=prior.length-1;i>=0;i--){
       const found=mentions(prior[i].content);
       if(found.length){inherited=found;anchor=String(prior[i].content).slice(0,280);break;}
       if(projects.includes('profile')&&profileQuestion(prior[i].content)){inherited=['profile'];anchor=String(prior[i].content).slice(0,280);break;}
+      // A self-contained intervening topic ends the older project thread.
+      if(!/(?:刚才|上面|前面|它|这个|那个|这些|那些|这条|那条|^那)/.test(prior[i].content))break;
     }
   }
   const selected = personalBackground || personalEducation ? (projects.includes('profile')?['profile']:[]) : explicit.length && !referential ? explicit : [...new Set([...explicit,...inherited])];
@@ -31,7 +34,7 @@ export function resolveConversationContext(question, interview, projects = []) {
   if(!selected.length&&!standalone&&questionType==='technical'&&referential&&classifyInterviewQuestion(prior.at(-1)?.content)==='algorithm')questionType='algorithm';
   // Unresolved scope must never receive a candidate identity for unconstrained
   // first-person generation. Generic teaching is safe; invented biography is not.
-  const generalKnowledge=!selected.length&&(projects.length>0||questionType==='algorithm'||/(?:八股|TCP|UDP|操作系统|三次握手)/i.test(question));
+  const generalKnowledge=!selected.length&&(genericAdvice||(!profileQuestion(question)&&(catalog.length>0||questionType==='algorithm'||/(?:八股|TCP|UDP|操作系统|三次握手|链表|二叉树|数据结构|数组|Redis)/i.test(question))));
   return {projects:selected,anchor:!explicit.length?anchor:'',questionType,generalKnowledge,personalBackground,
     query:selected.length?`${selected.join(' ')} ${question}${!explicit.length&&anchor?`\n前问：${anchor}`:''}`:question,
     note:selected.length?`本轮知识主题：${selected.join('、')}。${!explicit.length&&anchor?`相关前问：${anchor}`:''}只用于理解问题，不证明事实或个人贡献。`:''};

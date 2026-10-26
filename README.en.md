@@ -65,6 +65,21 @@ The source repository does not include the large OCR runtime and models. Downloa
 
 </details>
 
+## Latest source updates
+
+Apple-inspired grouped connection settings, more conversational project answers, and fixes for multi-part questions and unrelated project context.
+
+![Model connection settings — empty public profile](docs/images/settings-dark.jpg)
+
+### Import and update your materials
+
+- Import PDF/DOCX resumes, text PDFs, common source files, or a local folder. Code is read as text; it is not executed. Legacy DOC files need conversion to DOCX or PDF.
+- Importing saves extracted text locally. Click **AI distill** after configuring your own model, then review any personal-contribution cards before using them.
+- Reimport the same files after editing them. Unchanged content is reused; changed sources invalidate old cards and are distilled again. There is no automatic filesystem watching.
+- Scanned PDFs and images need the local OCR runtime. Release 0.6.0 includes it; a source checkout requires separate preparation. Poor scans may still need manual correction. Single-file imports are limited to 30 MB, and long materials may be truncated or require splitting.
+
+These changes are on the source branch; the existing 0.6.0 installer has not been replaced by this commit.
+
 ## Get your resume ready, too
 
 There is a companion **[Chinese LaTeX resume template →](https://github.com/Chenxxxxxx06/chinese-resume-latex)** with Chinese typography, project entries, clickable links and logo slots. Fill in your own content, compile with XeLaTeX or Overleaf, then import the resulting PDF into Cheat Bluff.
